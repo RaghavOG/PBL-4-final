@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 import joblib, json, os
 import pandas as pd
+import random
 
 # 1️⃣ Define the API contract
 
@@ -97,6 +98,8 @@ pipeline        = None
 threshold       = 0.5
 model_loaded    = False
 model_load_error = None
+
+
 
 try:
     if os.path.exists(PIPELINE_FILE):
@@ -282,13 +285,38 @@ async def predict(req: PredictRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Inference error: {str(e)}")
 
-# Add a documentation endpoint to explain the predictions
-@app.get("/docs/model", tags=["Documentation"])
-def model_info():
-    return {
-        "model_type": "Random Forest with PCA-selected features",
-        "features": ['proto','dur','state','smean','sttl',
-                    'dpkts','ackdat','synack','response_body_len','djit'],
-        "prediction": "1 = Intrusion detected, 0 = Normal traffic",
-        "threshold": threshold
-    }
+
+TEST_CSV  = os.path.join(BASE_DIR, "UNSW_NB15_testing_cleaned.csv")
+
+if not os.path.exists(TEST_CSV):
+    raise RuntimeError(f"Test CSV not found at {TEST_CSV}")
+
+_df_test = pd.read_csv(TEST_CSV)
+_attack_rows = _df_test[_df_test['label']==1]
+
+if _attack_rows.empty:
+    raise RuntimeError("No attack rows found in test CSV")
+
+
+TOP_FEATS = [
+    'proto','dur','state','smean','sttl',
+    'dpkts','ackdat','synack','response_body_len','djit'
+]
+
+
+@app.get("/sample-attack", tags=["Testing"])
+def sample_attack():
+    """
+    Returns a single random attack sample's feature vector.
+    """
+    try:
+        # Pick one row from the pre-filtered attacks
+        row = _attack_rows.sample(n=1).iloc[0]
+        # Extract only the PCA-selected features in the exact same order
+        feats = [float(row[f]) for f in TOP_FEATS]
+        return {"features": feats}
+    except Exception as e:
+        # Log to console so you can see the real error
+        print("❌ /sample-attack error:", e)
+        # Return a 500 with the error message
+        raise HTTPException(status_code=500, detail=str(e))

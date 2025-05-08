@@ -44,7 +44,8 @@ export default function Popup() {
     try {
       setNotificationStatus("Sending...");
       const response = await browser.runtime.sendMessage({ cmd: "test-notification" });
-      if (response && response.ok) {
+      console.log("Test notification response", response);
+      if (response?.ok) {
         setNotificationStatus("Test notification sent!");
         setTimeout(() => setNotificationStatus(""), 3000);
       }
@@ -54,6 +55,7 @@ export default function Popup() {
       setTimeout(() => setNotificationStatus(""), 3000);
     }
   };
+  
 
   if (error) {
     return (

@@ -59,7 +59,7 @@ browser.runtime.onMessage.addListener((msg, _sender, send) => {
   }
   // New handler for test notification
   if (msg.cmd === "test-notification") {
-    triggerTestNotification().then(() => {
+    triggerSampleAttack().then(() => {
       send({ ok: true, message: "Test notification triggered" });
     });
     return true; // Required for async response
@@ -243,43 +243,57 @@ async function checkApiConnection() {
 setTimeout(checkApiConnection, 2000);
 
 // Function to trigger test notification
-function triggerTestNotification() {
-  console.log("Triggering test notification");
-  
-  // Display warning badge
-  browser.action.setBadgeText({ text: "⚠️" });
-  browser.action.setBadgeBackgroundColor({ color: "#FF0000" });
-  
-  // Create notification with test data
-  browser.notifications.create({
-    type: "basic",
-    iconUrl: browser.runtime.getURL("icon/32.png"),
-    title: "TEST: Intrusion Alert",
-    message: `Potential attack detected: test.malicious-site.com\nConfidence: 92.50%`
-  });
-  
-  // Reset badge after a few seconds
-  setTimeout(() => {
-    browser.action.setBadgeText({ text: enabled ? "ON" : "" });
-  }, 5000);
-  
-  // Add test entry to logs
-  const testEntry = {
-    url: "https://test.malicious-site.com/endpoint?param=value",
-    time: Date.now(),
-    safe: false,
-    probability: 0.925
-  };
-  
-  requestLogs.push(testEntry);
-  
-  // // Keep logs at a reasonable size
-  // if (requestLogs.length > 500) {
-  //   requestLogs = requestLogs.slice(-500);
-  // }
-  
-  // Update storage
-  return browser.storage.local.set({ requestLogs });
+async function triggerSampleAttack() {
+  try {
+    console.log("🔬 Fetching a sampled attack from backend…");
+    // 1) fetch a real attack feature vector
+    const resp1 = await fetch("http://localhost:8000/sample-attack");
+    if (!resp1.ok) throw new Error("Sample API returned " + resp1.status);
+    const { features } = await resp1.json();
+
+    console.log("🔥 Sending to predict-legacy:", features);
+    // 2) send it through your existing prediction endpoint
+    const resp2 = await fetch("http://localhost:8000/predict-legacy", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ features })
+    });
+    if (!resp2.ok) throw new Error("Predict API returned " + resp2.status);
+    const result = await resp2.json();
+
+    // 3) reuse your notification logic
+    const isSafe = result.prediction === 0;
+    if (!isSafe && result.probability > 0.7) {
+      browser.action.setBadgeText({ text: "⚠️" });
+      browser.action.setBadgeBackgroundColor({ color: "#FF0000" });
+      browser.notifications.create({
+        type: "basic",
+        iconUrl: browser.runtime.getURL("icon/32.png"),
+        title: "Intrusion Alert (Sample)",
+        message: `Detected sample attack\nConfidence: ${(result.probability*100).toFixed(1)}%`
+      });
+      // restore badge after a moment
+      setTimeout(() => {
+        browser.action.setBadgeText({ text: enabled ? "ON" : "" });
+      }, 3000);
+    }
+
+    // 4) log it
+    const entry = {
+      url: "SAMPLED_ATTACK",
+      time: Date.now(),
+      safe: isSafe,
+      probability: result.probability
+    };
+    requestLogs.push(entry);
+    if (requestLogs.length > 500) {
+      requestLogs = requestLogs.slice(-500);
+    }
+    await browser.storage.local.set({ requestLogs });
+
+  } catch (e) {
+    console.error("triggerSampleAttack error:", e);
+  }
 }
 
 // // Also restore state from storage on startup
