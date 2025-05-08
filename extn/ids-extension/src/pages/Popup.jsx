@@ -1,5 +1,5 @@
 // src/pages/Popup.jsx
-// React popup component using the WebExtension browser API
+// React popup component using the WebExtension browser API with real-time updates
 
 import React, { useEffect, useState } from "react";
 import browser from "webextension-polyfill";
@@ -10,21 +10,54 @@ export default function Popup() {
   const [error, setError] = useState(null);
   const [notificationStatus, setNotificationStatus] = useState("");
 
+  // Function to load stats from storage
+  const loadStats = async () => {
+    try {
+      const { requestLogs = [] } = await browser.storage.local.get("requestLogs");
+      const logs = Array.isArray(requestLogs) ? requestLogs : [];
+      const unsafeCount = logs.filter((l) => l.safe === false).length;
+      setStats({ total: logs.length, unsafe: unsafeCount });
+    } catch (e) {
+      console.error("Error loading stats", e);
+      setError("Failed to load statistics");
+    }
+  };
+
   // Load initial state & stats from storage
   useEffect(() => {
     (async () => {
       try {
-        const { enabled: on = false, requestLogs = [] } =
-          await browser.storage.local.get(["enabled", "requestLogs"]);
+        const { enabled: on = false } = await browser.storage.local.get("enabled");
         setEnabled(on);
-        const logs = Array.isArray(requestLogs) ? requestLogs : [];
-        const unsafeCount = logs.filter((l) => l.safe === false).length;
-        setStats({ total: logs.length, unsafe: unsafeCount });
+        await loadStats();
       } catch (e) {
         console.error("Storage API error", e);
         setError("Chrome APIs not available. Are you in an extension?");
       }
     })();
+    
+    // Setup real-time listener for storage changes
+    const storageChangeListener = (changes, areaName) => {
+      if (areaName !== "local") return;
+      
+      // Update enabled state if it changed
+      if (changes.enabled) {
+        setEnabled(changes.enabled.newValue);
+      }
+      
+      // Update stats if requestLogs changed
+      if (changes.requestLogs) {
+        loadStats();
+      }
+    };
+    
+    // Add the listener
+    browser.storage.onChanged.addListener(storageChangeListener);
+    
+    // Clean up the listener when component unmounts
+    return () => {
+      browser.storage.onChanged.removeListener(storageChangeListener);
+    };
   }, []);
 
   // Toggle on/off
@@ -145,7 +178,6 @@ export default function Popup() {
           className="flex items-center justify-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
           onClick={async (e) => {
             e.preventDefault();
-            // browser.tabs.create({ url: browser.runtime.getURL("dashboard.html") });
             await browser.runtime.openOptionsPage();
           }}
         >
