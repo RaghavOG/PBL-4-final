@@ -8,6 +8,7 @@ export default function Popup() {
   const [enabled, setEnabled] = useState(false);
   const [stats, setStats] = useState({ total: 0, unsafe: 0 });
   const [error, setError] = useState(null);
+  const [notificationStatus, setNotificationStatus] = useState("");
 
   // Load initial state & stats from storage
   useEffect(() => {
@@ -35,6 +36,22 @@ export default function Popup() {
     } catch (e) {
       console.error("Runtime API error", e);
       setError("Chrome APIs not available. Are you in an extension?");
+    }
+  };
+
+  // Trigger test notification
+  const triggerTestNotification = async () => {
+    try {
+      setNotificationStatus("Sending...");
+      const response = await browser.runtime.sendMessage({ cmd: "test-notification" });
+      if (response && response.ok) {
+        setNotificationStatus("Test notification sent!");
+        setTimeout(() => setNotificationStatus(""), 3000);
+      }
+    } catch (e) {
+      console.error("Runtime API error", e);
+      setNotificationStatus("Error sending notification");
+      setTimeout(() => setNotificationStatus(""), 3000);
     }
   };
 
@@ -135,6 +152,22 @@ export default function Popup() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
           </svg>
         </button>
+      </div>
+
+      {/* Test Notification Section */}
+      <div className="mt-5 flex justify-center">
+        <button 
+          className="flex items-center justify-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+          onClick={triggerTestNotification}
+        >
+          <span>Send Test Notification</span>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+          </svg>
+        </button>
+        {notificationStatus && (
+          <p className="text-sm text-slate-700 ml-4">{notificationStatus}</p>
+        )}
       </div>
     </div>
   );

@@ -57,6 +57,13 @@ browser.runtime.onMessage.addListener((msg, _sender, send) => {
       requestLogs: requestLogs.slice(-100)  // last 100 entries
     });
   }
+  // New handler for test notification
+  if (msg.cmd === "test-notification") {
+    triggerTestNotification().then(() => {
+      send({ ok: true, message: "Test notification triggered" });
+    });
+    return true; // Required for async response
+  }
 });
 
 // Helper function to check if URL should be excluded based on domain
@@ -167,7 +174,7 @@ async function analyzeRequest(details) {
       if (result.probability > 0.7) {
         browser.notifications.create({
           type: "basic",
-          iconUrl: "icon/32.png",
+          iconUrl: browser.runtime.getURL("icon/32.png"),
           title: "Intrusion Alert",
           message: `Potential attack detected: ${new URL(details.url).hostname}\nConfidence: ${(result.probability * 100).toFixed(2)}%`
         });
@@ -235,10 +242,50 @@ async function checkApiConnection() {
 // Check API connection on startup
 setTimeout(checkApiConnection, 2000);
 
-// Also restore state from storage on startup
-(async function() {
-  const data = await browser.storage.local.get(["enabled", "requestLogs"]);
-  enabled = data.enabled || false;
-  requestLogs = data.requestLogs || [];
-  browser.action.setBadgeText({ text: enabled ? "ON" : "" });
-})();
+// Function to trigger test notification
+function triggerTestNotification() {
+  console.log("Triggering test notification");
+  
+  // Display warning badge
+  browser.action.setBadgeText({ text: "⚠️" });
+  browser.action.setBadgeBackgroundColor({ color: "#FF0000" });
+  
+  // Create notification with test data
+  browser.notifications.create({
+    type: "basic",
+    iconUrl: browser.runtime.getURL("icon/32.png"),
+    title: "TEST: Intrusion Alert",
+    message: `Potential attack detected: test.malicious-site.com\nConfidence: 92.50%`
+  });
+  
+  // Reset badge after a few seconds
+  setTimeout(() => {
+    browser.action.setBadgeText({ text: enabled ? "ON" : "" });
+  }, 5000);
+  
+  // Add test entry to logs
+  const testEntry = {
+    url: "https://test.malicious-site.com/endpoint?param=value",
+    time: Date.now(),
+    safe: false,
+    probability: 0.925
+  };
+  
+  requestLogs.push(testEntry);
+  
+  // // Keep logs at a reasonable size
+  // if (requestLogs.length > 500) {
+  //   requestLogs = requestLogs.slice(-500);
+  // }
+  
+  // Update storage
+  return browser.storage.local.set({ requestLogs });
+}
+
+// // Also restore state from storage on startup
+// (async function() {
+//   const data = await browser.storage.local.get(["enabled", "requestLogs"]);
+//   enabled = data.enabled || false;
+//   requestLogs = data.requestLogs || [];
+//   browser.action.setBadgeText({ text: enabled ? "ON" : "" });
+// })();
