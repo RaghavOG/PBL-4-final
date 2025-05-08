@@ -1,0 +1,76 @@
+1. Categorical Features (object data type)
+These are non-numeric fields that represent qualitative attributes.
+
+srcip (Source IP Address) – The IP address of the sender.
+sport (Source Port) – The port number from which the packet was sent.
+dstip (Destination IP Address) – The IP address of the receiver.
+dsport (Destination Port) – The port number of the receiver.
+proto (Protocol) – The network protocol used (e.g., TCP, UDP, ICMP).
+state (Connection State) – The status of the network connection (e.g., ESTABLISHED, FIN, SYN_SENT).
+service – The type of network service (e.g., HTTP, FTP, DNS).
+ct_ftp_cmd – Number of FTP commands used in a connection.
+attack_cat – The category of the attack (e.g., DoS, Reconnaissance, Normal).
+Label / label – The binary label (e.g., 0 for normal, 1 for attack)
+
+2. Numerical Features (float64 data type)
+These are continuous or discrete numerical values, mostly related to packet statistics.
+
+2.1. Timing & Duration
+dur (Duration) – The duration of the network connection in seconds.
+Stime (Start Time) – Timestamp when the connection started.
+Ltime (Last Time) – Timestamp when the connection ended.
+Sintpkt (Source Inter-Packet Time) – The time interval between packets sent from the source.
+Dintpkt (Destination Inter-Packet Time) – The time interval between packets received at the destination.
+tcprtt (TCP Round Trip Time) – The time taken for a TCP packet to travel from source to destination and back.
+synack (SYN-ACK Delay) – The delay between sending a SYN and receiving a SYN-ACK response.
+ackdat (ACK-DATA Delay) – The time delay between sending an ACK and receiving the actual data.
+
+
+2.2. Packet & Byte Counts
+sbytes (Source Bytes) – The number of bytes sent from the source.
+dbytes (Destination Bytes) – The number of bytes received at the destination.
+smeansz (Source Mean Packet Size) – The average size of packets sent from the source.
+dmeansz (Destination Mean Packet Size) – The average size of packets received at the destination.
+res_bdy_len (Response Body Length) – The length of the response body in bytes.
+
+
+2.3. Packet Flow Metrics
+Spkts (Source Packets) – The total number of packets sent by the source.
+Dpkts (Destination Packets) – The total number of packets received by the destination.
+Sload (Source Load) – The data transfer rate from the source in bits per second.
+Dload (Destination Load) – The data transfer rate at the destination in bits per second.
+Sjit (Source Jitter) – The variation in packet inter-arrival time at the source.
+Djit (Destination Jitter) – The variation in packet inter-arrival time at the destination.
+
+
+2.4. TCP Window & Loss Metrics
+swin (Source TCP Window Size) – The advertised window size in TCP communication.
+dwin (Destination TCP Window Size) – The advertised TCP window size at the destination.
+stcpb (Source TCP Base Sequence Number) – The starting sequence number for TCP connection at the source.
+dtcpb (Destination TCP Base Sequence Number) – The starting sequence number for TCP connection at the destination.
+sloss (Source Packet Loss) – Number of packets lost by the source.
+dloss (Destination Packet Loss) – Number of packets lost at the destination.
+
+
+
+2.5. Connection Behavior Metrics
+trans_depth (Transaction Depth) – Indicates the depth of a request-response transaction (e.g., for HTTP requests).
+is_sm_ips_ports – Whether the source and destination IPs & ports are the same (1: Yes, 0: No).
+ct_state_ttl (Count of State-TTL Pairs) – The number of times a particular connection state and TTL (Time-to-Live) combination appears.
+ct_flw_http_mthd (Count of HTTP Methods) – Number of HTTP request methods used in the connection (GET, POST, etc.).
+is_ftp_login – Whether the connection involves an FTP login attempt.
+ct_ftp_cmd (Count of FTP Commands) – The number of FTP commands used.
+ct_srv_src (Count of Same Service from Source IP) – Number of times the same service has been requested by the source IP.
+ct_srv_dst (Count of Same Service to Destination IP) – Number of times the same service has been requested at the destination.
+ct_dst_ltm (Count of Connections to Destination IP in Last Time Window) – Number of connections made to the same destination IP in a short time.
+ct_src_ltm (Count of Connections from Source IP in Last Time Window) – Number of connections initiated by the same source IP in a short time.
+ct_src_dport_ltm (Count of Source IP & Destination Port in Last Time Window) – How frequently a source-destination port pair occurs.
+ct_dst_sport_ltm (Count of Destination IP & Source Port in Last Time Window) – How frequently a destination-source port pair occurs.
+ct_dst_src_ltm (Count of Destination & Source IP Pairs in Last Time Window) – Number of connections between a specific source-destination pair.
+
+
+3. Label Columns
+attack_cat (Categorical) – Attack category (e.g., Normal, DoS, Probe, etc.).
+Label / label (Numerical) – Typically, a binary classification label:
+0 → Normal traffic
+1 → Malicious traffic (attack)

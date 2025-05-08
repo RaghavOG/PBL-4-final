@@ -1,0 +1,117 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    width: 800px;
+    height: 600px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .header {
+    padding: 10px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .header h1 {
+    margin: 0;
+    font-size: 18px;
+  }
+  
+  .controls {
+    display: flex;
+    margin-top: 10px;
+    gap: 10px;
+  }
+  
+  #filterInput {
+    flex: 1;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  button {
+    padding: 5px 10px;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #3367d6;
+  }
+  
+  .logs-container {
+    flex: 1;
+    overflow-y: auto;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  th, td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  th {
+    background-color: #f5f5f5;
+    position: sticky;
+    top: 0;
+  }
+  
+  .url-cell {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  tr:hover {
+    background-color: #f5f5f5;
+    cursor: pointer;
+  }
+  
+  tr.selected {
+    background-color: #e8f0fe;
+  }
+  
+  .details-panel {
+    height: 200px;
+    padding: 10px;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+  }
+  
+  .detail-group {
+    margin-bottom: 10px;
+  }
+  
+  .detail-item {
+    display: flex;
+    margin-bottom: 5px;
+  }
+  
+  .label {
+    font-weight: bold;
+    width: 100px;
+  }
+  
+  .code-block {
+    background-color: #f5f5f5;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: monospace;
+    font-size: 12px;
+    margin: 0;
+  }

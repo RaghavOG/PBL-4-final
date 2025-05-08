@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Inline-IDS Control</title>
+  <style>
+    body { font-family: sans-serif; width: 240px; padding: 16px; }
+    h2   { margin: 0 0 12px; text-align: center; }
+    label { display: flex; align-items: center; cursor: pointer; }
+    input[type="checkbox"] { margin-right: 8px; transform: scale(1.2); }
+    #status { font-weight: bold; }
+    #stats  { margin-top: 16px; font-size: 0.9em; }
+    #stats div { margin: 4px 0; }
+    #model { color: green; font-weight: bold; }
+    #model.not-ready { color: red; }
+  </style>
+</head>
+<body>
+  <h2>Inline-IDS</h2>
+
+  <!-- Toggle switch -->
+  <label>
+    <input type="checkbox" id="toggle">
+    <span id="status">Protection OFF</span>
+  </label>
+
+  <!-- Model load indicator -->
+  <div id="stats">
+    <div>Model status: <span id="model" class="not-ready">Loading…</span></div>
+    <div>Requests checked: <span id="reqCount">0</span></div>
+    <div>Alerts fired:      <span id="alertCount">0</span></div>
+  </div>
+
+  <script>
+    const toggle     = document.getElementById("toggle");
+    const status     = document.getElementById("status");
+    const modelLbl   = document.getElementById("model");
+    const reqCount   = document.getElementById("reqCount");
+    const alertCount = document.getElementById("alertCount");
+
+    // 1️⃣ Init UI & stats
+    chrome.storage.local.get(
+      ["enabled","modelReady","requestCount","alertCount"],
+      ({ enabled, modelReady, requestCount, alertCount: alerts }) => {
+        toggle.checked = Boolean(enabled);
+        status.textContent = enabled ? "Protection ON" : "Protection OFF";
+
+        modelLbl.textContent = modelReady ? "Ready" : "Not Ready";
+        modelLbl.classList.toggle("not-ready", !modelReady);
+
+        reqCount.textContent   = requestCount ?? 0;
+        alertCount.textContent = alerts       ?? 0;
+      }
+    );
+
+    // 2️⃣ Listen for toggle
+    toggle.addEventListener("change", () => {
+      chrome.runtime.sendMessage(
+        { cmd: "toggle", on: toggle.checked },
+        () => {
+          status.textContent = toggle.checked ? "Protection ON" : "Protection OFF";
+        }
+      );
+    });
+
+    // 3️⃣ Refresh stats when popup opens
+    chrome.runtime.sendMessage({ cmd: "get-stats" }, (res) => {
+      if (res) {
+        modelLbl.textContent  = res.modelReady ? "Ready" : "Not Ready";
+        modelLbl.classList.toggle("not-ready", !res.modelReady);
+        reqCount.textContent   = res.requestCount;
+        alertCount.textContent = res.alertCount;
+      }
+    });
+  </script>
+</body>
+</html>

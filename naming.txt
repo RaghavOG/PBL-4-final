@@ -1,0 +1,6 @@
+Generic Attack - 
+Exploits 
+Fuzzers 
+Denial of Service (DoS)
+Reconnaissance  - The process of gathering information about a target network or system before launching an actual attack.
+Analysis  - Advanced methods used to analyze and manipulate system logs, network traffic, or security defenses to identify weaknesses.
