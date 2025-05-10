@@ -23,7 +23,8 @@
     "webRequest",
     "webRequestBlocking",
     "activeTab",
-    "scripting"
+    "scripting",
+    "alarms"
   ],
   "host_permissions": [
     "<all_urls>",

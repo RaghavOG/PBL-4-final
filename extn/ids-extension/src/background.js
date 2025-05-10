@@ -296,10 +296,35 @@ async function triggerSampleAttack() {
   }
 }
 
-// // Also restore state from storage on startup
-// (async function() {
-//   const data = await browser.storage.local.get(["enabled", "requestLogs"]);
-//   enabled = data.enabled || false;
-//   requestLogs = data.requestLogs || [];
-//   browser.action.setBadgeText({ text: enabled ? "ON" : "" });
-// })();
+// Persistence mechanism for Manifest V3
+// 1. Create an alarm that fires periodically to wake up the service worker
+browser.alarms.create("keepAlive", { periodInMinutes: 0.5 });
+
+// 2. Listen for the alarm and do minimal work to keep the service worker alive
+browser.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "keepAlive") {
+    console.log("💓 Service worker heartbeat at", new Date().toLocaleTimeString());
+    checkApiConnection();
+  }
+});
+
+// 3. Register a handler for when the service worker is about to be terminated
+if (typeof self.onbeforeunload === 'function') {
+  self.onbeforeunload = (event) => {
+    console.log("⚠️ Service worker is about to be terminated");
+    // Save any important state here
+    return null;
+  };
+}
+
+// Restore state from storage on startup
+(async function() {
+  const data = await browser.storage.local.get(["enabled", "requestLogs"]);
+  enabled = data.enabled || false;
+  requestLogs = data.requestLogs || [];
+  browser.action.setBadgeText({ text: enabled ? "ON" : "" });
+  console.log("🔄 Service worker initialized at", new Date().toLocaleTimeString());
+})();
+
+
+
