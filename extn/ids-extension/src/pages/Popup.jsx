@@ -6,17 +6,21 @@ import browser from "webextension-polyfill";
 
 export default function Popup() {
   const [enabled, setEnabled] = useState(false);
-  const [stats, setStats] = useState({ total: 0, unsafe: 0 });
+  const [stats, setStats] = useState({ total: 0, unsafe: 0, totalRequests: 0 });
   const [error, setError] = useState(null);
   const [notificationStatus, setNotificationStatus] = useState("");
 
   // Function to load stats from storage
   const loadStats = async () => {
     try {
-      const { requestLogs = [] } = await browser.storage.local.get("requestLogs");
+      const { requestLogs = [], totalRequests = 0 } = await browser.storage.local.get(["requestLogs", "totalRequests"]);
       const logs = Array.isArray(requestLogs) ? requestLogs : [];
       const unsafeCount = logs.filter((l) => l.safe === false).length;
-      setStats({ total: logs.length, unsafe: unsafeCount });
+      setStats({ 
+        total: logs.length, 
+        unsafe: unsafeCount,
+        totalRequests: totalRequests
+      });
     } catch (e) {
       console.error("Error loading stats", e);
       setError("Failed to load statistics");
@@ -45,8 +49,8 @@ export default function Popup() {
         setEnabled(changes.enabled.newValue);
       }
       
-      // Update stats if requestLogs changed
-      if (changes.requestLogs) {
+      // Update stats if requestLogs or totalRequests changed
+      if (changes.requestLogs || changes.totalRequests) {
         loadStats();
       }
     };
@@ -159,9 +163,13 @@ export default function Popup() {
             ></div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-2">
             <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
               <p className="text-xs uppercase text-slate-500 font-medium mb-1">Total Requests</p>
+              <p className="text-xl font-bold text-slate-800">{stats.totalRequests}</p>
+            </div>
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <p className="text-xs uppercase text-slate-500 font-medium mb-1">Analyzed</p>
               <p className="text-xl font-bold text-slate-800">{stats.total}</p>
             </div>
             <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 border-l-2 border-l-red-500">

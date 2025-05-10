@@ -3,6 +3,7 @@ import axios from "axios";
 
 let enabled = false;
 let requestLogs = [];  // persisted in storage
+let totalRequests = 0; // Counter for all requests seen
 
 // Rate limiting variables
 let lastRequestTime = 0;
@@ -31,7 +32,8 @@ browser.runtime.onInstalled.addListener(async () => {
   console.log("🔄 Extension installed/upgraded");
   await browser.storage.local.set({
     enabled: false,
-    requestLogs: []
+    requestLogs: [],
+    totalRequests: 0
   });
   browser.action.setBadgeText({ text: "" });
 });
@@ -54,7 +56,8 @@ browser.runtime.onMessage.addListener((msg, _sender, send) => {
   if (msg.cmd === "get-stats") {
     send({
       enabled,
-      requestLogs: requestLogs.slice(-100)  // last 100 entries
+      requestLogs: requestLogs.slice(-100),  // last 100 entries
+      totalRequests // Include total requests in stats
     });
   }
   // New handler for test notification
@@ -196,6 +199,11 @@ browser.webRequest.onCompleted.addListener(
   (details) => {
     if (!enabled) return;
     
+    // Increment total requests counter
+    totalRequests++;
+    // Persist the counter to storage
+    browser.storage.local.set({ totalRequests });
+    
     // Increment counter for sampling
     requestCounter++;
     
@@ -319,12 +327,13 @@ if (typeof self.onbeforeunload === 'function') {
 
 // Restore state from storage on startup
 (async function() {
-  const data = await browser.storage.local.get(["enabled", "requestLogs"]);
+  const data = await browser.storage.local.get(["enabled", "requestLogs", "totalRequests"]);
   enabled = data.enabled || false;
-  requestLogs = data.requestLogs || [];
+  requestLogs = [];
+  totalRequests = 0;
+  // requestLogs = data.requestLogs || [];
+  // totalRequests = data.totalRequests || 0;
   browser.action.setBadgeText({ text: enabled ? "ON" : "" });
   console.log("🔄 Service worker initialized at", new Date().toLocaleTimeString());
+  console.log(`📊 Total requests tracked: ${totalRequests}`);
 })();
-
-
-

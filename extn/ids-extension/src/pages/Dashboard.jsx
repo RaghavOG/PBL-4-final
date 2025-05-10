@@ -5,14 +5,16 @@ export default function Dashboard() {
   const [enabled, setEnabled] = useState(false);
   const [logs, setLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [totalRequests, setTotalRequests] = useState(0);
 
   // Function to load data from storage
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const { enabled: on = false, requestLogs = [] } = await browser.storage.local.get(["enabled", "requestLogs"]);
+      const { enabled: on = false, requestLogs = [], totalRequests = 0 } = await browser.storage.local.get(["enabled", "requestLogs", "totalRequests"]);
       setEnabled(on);
       setLogs(Array.isArray(requestLogs) ? requestLogs : []);
+      setTotalRequests(totalRequests);
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
@@ -40,6 +42,11 @@ export default function Dashboard() {
           ? changes.requestLogs.newValue 
           : [];
         setLogs(newLogs);
+      }
+
+      // Update totalRequests if it changed
+      if (changes.totalRequests) {
+        setTotalRequests(changes.totalRequests.newValue || 0);
       }
     };
     
@@ -102,9 +109,13 @@ export default function Dashboard() {
           </div>
         </header>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-xl shadow-md p-4 border-l-4 border-blue-500">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-xl shadow-md p-4 border-l-4 border-purple-500">
             <p className="text-sm uppercase text-gray-500 font-medium">Total Requests</p>
+            <p className="text-2xl font-bold">{totalRequests}</p>
+          </div>
+          <div className="bg-white rounded-xl shadow-md p-4 border-l-4 border-blue-500">
+            <p className="text-sm uppercase text-gray-500 font-medium">Analyzed</p>
             <p className="text-2xl font-bold">{total}</p>
           </div>
           <div className="bg-white rounded-xl shadow-md p-4 border-l-4 border-green-500">
